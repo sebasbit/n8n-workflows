@@ -1,0 +1,402 @@
+{
+  "name": "step-by-step-rag-chatbot",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4f94f5b6-6407-4c91-9bc6-388868b38d7f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "34059038-e2e8-4efd-8555-2e746de94516",
+      "name": "Search files and folders",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8c067146-5b76-448d-89dd-08c95f03e934",
+      "name": "Download file",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "e1eb98be-ac9c-4c78-b1de-90dddb123363",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        0
+      ],
+      "id": "47a01fbf-86fb-4fef-ae75-a1500f3fd6dd",
+      "name": "Supabase Vector Store",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        256
+      ],
+      "id": "cb1d5c01-a880-4b7a-a571-2dd212344308",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        256
+      ],
+      "id": "0572718d-cce2-4059-a61d-56bfaa23b430",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "content": "**RAG Pipeline**",
+        "height": 464,
+        "width": 1328,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "f72eced5-1576-47a6-bc2b-aeaf5935302d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -672
+      ],
+      "id": "df7e01e0-139e-40d1-8eee-031e12d7194e",
+      "name": "When chat message received",
+      "webhookId": "94efeb64-ae3e-4bc7-a44d-df8fde0911e7"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a friendly and helpful assistant who helps tourists visiting the Valle del Cauca in Colombia find answers to their questions about what places to visit.\n\nYour knowledge comes from a connected vector database that includes:\n- A description of places to visit in the Valle del Cauca.\n- A packing list for each location.\n- Important notes and considerations for each location."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        -672
+      ],
+      "id": "b993f148-13c2-48af-8f4a-d2ba71551736",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        -464
+      ],
+      "id": "bc055df3-ea90-405a-84ea-1b4f367f65fa",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        -464
+      ],
+      "id": "7b6fd005-54a2-4037-9b9b-80def1c40eb4",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to answer any questions about tourism in the Valle del Cauca region of Colombia. It contains up-to-date information on tourist attractions, activities, and important considerations for each destination. Always refer to this tool when a client asks about tourism in Valle del Cauca. Don't guess; consult the database instead.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        -464
+      ],
+      "id": "73967458-435d-4bc6-a2be-51814997c12e",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        -288
+      ],
+      "id": "f5a5d1e6-b5fd-4488-9109-edd37323c16b",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+      }
+    },
+    {
+      "parameters": {
+        "content": "**AI Agent**",
+        "height": 624,
+        "width": 1328,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "af8d2c2d-5c18-4fea-aa92-b0f38085f056",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3b57ddda-c7ab-4087-ae01-4d385a8c0cfe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25571a8bd4bfe80c7aa7418403162fbe7eb49348a370eadeed7f3c297552a9ac"
+  },
+  "id": "UazYULDX1JBr1cm8",
+  "tags": []
+}
